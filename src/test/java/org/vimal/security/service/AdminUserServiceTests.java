@@ -2383,7 +2383,7 @@ public class AdminUserServiceTests extends BaseTest {
             LOGGER.info("Using user: '{}' to create roles:\n{}", creator.getUsername(), ToJsonForLoggingUtil.toJson(roles));
             var response = AdminUserCallsHelper.createRoles(accessToken, roles);
             LOGGER.info("Validating response to create roles:\n{}", response.getBody().asPrettyString());
-            ResponseValidatorHelper.validateResponseOfRolesCreation(response, creator, roles);
+            ResponseValidatorHelper.validateResponseOfRolesCreation(response, creator, roles, "");
         }
     }
 
@@ -2805,7 +2805,7 @@ public class AdminUserServiceTests extends BaseTest {
             LOGGER.info("Using user: '{}' to update roles:\n{}", updater.getUsername(), ToJsonForLoggingUtil.toJson(updatedInputs));
             var response = AdminUserCallsHelper.updateRoles(accessToken, updatedInputs);
             LOGGER.info("Validating response to update roles:\n{}", response.getBody().asPrettyString());
-            ResponseValidatorHelper.validateResponseOfRolesUpdate(response, updater, rolesToBeUpdated, updatedInputs);
+            ResponseValidatorHelper.validateResponseOfRolesUpdate(response, updater, rolesToBeUpdated, updatedInputs,"");
         }
     }
 

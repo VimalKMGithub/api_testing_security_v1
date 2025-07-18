@@ -115,17 +115,23 @@ public final class ResponseValidatorHelper {
 
     public static void validateResponseOfRolesCreation(Response response,
                                                        UserDto creator,
-                                                       Set<RoleDto> rolesToBeCreated) {
+                                                       Set<RoleDto> rolesToBeCreated,
+                                                       String pathPrefix) {
+        if (!pathPrefix.isBlank()) pathPrefix += ".";
+        response.then().statusCode(200)
+                .body(pathPrefix + "size()", equalTo(rolesToBeCreated.size()));
+
         response.then().statusCode(200)
                 .body("size()", equalTo(rolesToBeCreated.size()));
 
         for (var role : rolesToBeCreated) {
+            var findPath = pathPrefix + "find { it.roleName == '" + role.getRoleName() + "' }";
             response.then()
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.description", equalTo(role.getDescription()))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.systemRole", equalTo(false))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.createdBy", equalTo(creator.getUsername()))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.updatedBy", equalTo(creator.getUsername()))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.permissions", (role.getPermissions() != null) ?
+                    .body(findPath + "description", equalTo(role.getDescription()))
+                    .body(findPath + "systemRole", equalTo(false))
+                    .body(findPath + "createdBy", equalTo(creator.getUsername()))
+                    .body(findPath + "updatedBy", equalTo(creator.getUsername()))
+                    .body(findPath + "permissions", (role.getPermissions() != null) ?
                             containsInAnyOrder(role.getPermissions().toArray()) :
                             empty());
         }
@@ -150,21 +156,21 @@ public final class ResponseValidatorHelper {
     public static void validateResponseOfRolesUpdate(Response response,
                                                      UserDto updater,
                                                      Set<RoleDto> rolesToBeUpdated,
-                                                     Set<RoleDto> updateInputs) {
+                                                     Set<RoleDto> updateInputs,
+                                                     String pathPrefix) {
+        if (!pathPrefix.isBlank()) pathPrefix += ".";
         response.then().statusCode(200)
-                .body("size()", equalTo(rolesToBeUpdated.size()));
-
+                .body(pathPrefix + "size()", equalTo(rolesToBeUpdated.size()));
+        
+        var updateInputsMap = updateInputs.stream().collect(Collectors.toMap(RoleDto::getRoleName, Function.identity()));
         for (var role : rolesToBeUpdated) {
-            var updateInput = updateInputs.stream()
-                    .filter(input -> input.getRoleName().equals(role.getRoleName()))
-                    .findFirst()
-                    .orElse(new RoleDto());
-
+            var updateInput = updateInputsMap.getOrDefault(role.getRoleName(), new RoleDto());
+            var findPath = pathPrefix + "find { it.roleName == '" + role.getRoleName() + "' }";
             response.then()
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.description", updateInput.getDescription() != null && !updateInput.getDescription().isBlank() ? equalTo(updateInput.getDescription()) : equalTo(role.getDescription()))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.systemRole", equalTo(false))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.updatedBy", equalTo(updater.getUsername()))
-                    .body("find { it.roleName == '" + role.getRoleName() + "' }.permissions", (updateInput.getPermissions() != null) ?
+                    .body(findPath + "description", updateInput.getDescription() != null ? equalTo(updateInput.getDescription()) : equalTo(role.getDescription()))
+                    .body(findPath + "systemRole", equalTo(false))
+                    .body(findPath + "updatedBy", equalTo(updater.getUsername()))
+                    .body(findPath + "permissions", (updateInput.getPermissions() != null) ?
                             containsInAnyOrder(updateInput.getPermissions().toArray()) :
                             (role.getPermissions() != null) ?
                                     containsInAnyOrder(role.getPermissions().toArray()) :
